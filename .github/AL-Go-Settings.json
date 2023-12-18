@@ -1,5 +1,9 @@
 {
+  "runs-on": "ubuntu-latest",
+  "doNotPublishApps": true,
+  "MicrosoftTelemetryConnectionString": "",
   "type": "PTE",
+  "UseCompilerFolder": true,
   "templateUrl": "https://github.com/businesscentralapps/tmpg5XtLq-PTE@main",
-  "MicrosoftTelemetryConnectionString": ""
+  "gitHubRunner": "ubuntu-latest"
 }
