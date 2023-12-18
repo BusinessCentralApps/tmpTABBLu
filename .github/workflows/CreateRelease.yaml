@@ -49,7 +49,7 @@ concurrency: release
 
 defaults:
   run:
-    shell: powershell
+    shell: pwsh
 
 env:
   ALGoOrgSettings: ${{ vars.ALGoOrgSettings }}
@@ -58,7 +58,7 @@ env:
 jobs:
   CreateRelease:
     needs: [ ]
-    runs-on: [ windows-latest ]
+    runs-on: [ ubuntu-latest ]
     outputs:
       telemetryScopeJson: ${{ steps.init.outputs.telemetryScopeJson }}
       artifacts: ${{ steps.analyzeartifacts.outputs.artifacts }}
@@ -69,7 +69,7 @@ jobs:
       - name: Dump Workflow Information
         uses: businesscentralapps/tmpg5XtLq-Actions/DumpWorkflowInfo@main
         with:
-          shell: powershell
+          shell: pwsh
 
       - name: Checkout
         uses: actions/checkout@v3
@@ -78,26 +78,26 @@ jobs:
         id: init
         uses: businesscentralapps/tmpg5XtLq-Actions/WorkflowInitialize@main
         with:
-          shell: powershell
+          shell: pwsh
           eventId: "DO0094"
 
       - name: Read settings
         id: ReadSettings
         uses: businesscentralapps/tmpg5XtLq-Actions/ReadSettings@main
         with:
-          shell: powershell
+          shell: pwsh
           get: templateUrl,repoName
 
       - name: Determine Projects
         id: determineProjects
         uses: businesscentralapps/tmpg5XtLq-Actions/DetermineProjectsToBuild@main
         with:
-          shell: powershell
+          shell: pwsh
 
       - name: Check for updates to AL-Go system files
         uses: businesscentralapps/tmpg5XtLq-Actions/CheckForUpdates@main
         with:
-          shell: powershell
+          shell: pwsh
           templateUrl: ${{ env.templateUrl }}
           downloadLatest: true
 
@@ -182,7 +182,7 @@ jobs:
         id: createreleasenotes
         uses: businesscentralapps/tmpg5XtLq-Actions/CreateReleaseNotes@main
         with:
-          shell: powershell
+          shell: pwsh
           parentTelemetryScopeJson: ${{ steps.init.outputs.telemetryScopeJson }}
           tag_name: ${{ github.event.inputs.tag }}
           target_commitish: ${{ steps.analyzeartifacts.outputs.commitish }}
@@ -214,7 +214,7 @@ jobs:
 
   UploadArtifacts:
     needs: [ CreateRelease ]
-    runs-on: [ windows-latest ]
+    runs-on: [ ubuntu-latest ]
     strategy:
       matrix: ${{ fromJson(needs.CreateRelease.outputs.artifacts) }}
       fail-fast: true
@@ -225,13 +225,13 @@ jobs:
       - name: Read settings
         uses: businesscentralapps/tmpg5XtLq-Actions/ReadSettings@main
         with:
-          shell: powershell
+          shell: pwsh
 
       - name: Read secrets
         id: ReadSecrets
         uses: businesscentralapps/tmpg5XtLq-Actions/ReadSecrets@main
         with:
-          shell: powershell
+          shell: pwsh
           gitHubSecrets: ${{ toJson(secrets) }}
           getSecrets: 'nuGetContext,storageContext'
 
@@ -271,7 +271,7 @@ jobs:
         env:
           Secrets: '${{ steps.ReadSecrets.outputs.Secrets }}'
         with:
-          shell: powershell
+          shell: pwsh
           type: 'Release'
           projects: ${{ matrix.project }}
           deliveryTarget: 'NuGet'
@@ -284,7 +284,7 @@ jobs:
         env:
           Secrets: '${{ steps.ReadSecrets.outputs.Secrets }}'
         with:
-          shell: powershell
+          shell: pwsh
           type: 'Release'
           projects: ${{ matrix.project }}
           deliveryTarget: 'Storage'
@@ -294,7 +294,7 @@ jobs:
   CreateReleaseBranch:
     needs: [ CreateRelease, UploadArtifacts ]
     if: ${{ github.event.inputs.createReleaseBranch=='true' }}
-    runs-on: [ windows-latest ]
+    runs-on: [ ubuntu-latest ]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -313,18 +313,18 @@ jobs:
   UpdateVersionNumber:
     needs: [ CreateRelease, UploadArtifacts ]
     if: ${{ github.event.inputs.updateVersionNumber!='' }}
-    runs-on: [ windows-latest ]
+    runs-on: [ ubuntu-latest ]
     steps:
       - name: Read settings
         uses: businesscentralapps/tmpg5XtLq-Actions/ReadSettings@main
         with:
-          shell: powershell
+          shell: pwsh
 
       - name: Read secrets
         id: ReadSecrets
         uses: businesscentralapps/tmpg5XtLq-Actions/ReadSecrets@main
         with:
-          shell: powershell
+          shell: pwsh
           gitHubSecrets: ${{ toJson(secrets) }}
           getSecrets: 'TokenForPush'
           useGhTokenWorkflowForPush: '${{ github.event.inputs.useGhTokenWorkflow }}'
@@ -332,7 +332,7 @@ jobs:
       - name: Update Version Number
         uses: businesscentralapps/tmpg5XtLq-Actions/IncrementVersionNumber@main
         with:
-          shell: powershell
+          shell: pwsh
           token: ${{ steps.ReadSecrets.outputs.TokenForPush }}
           parentTelemetryScopeJson: ${{ needs.CreateRelease.outputs.telemetryScopeJson }}
           versionNumber: ${{ github.event.inputs.updateVersionNumber }}
@@ -341,7 +341,7 @@ jobs:
   PostProcess:
     needs: [ CreateRelease, UploadArtifacts, CreateReleaseBranch, UpdateVersionNumber ]
     if: always()
-    runs-on: [ windows-latest ]
+    runs-on: [ ubuntu-latest ]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -350,6 +350,6 @@ jobs:
         id: PostProcess
         uses: businesscentralapps/tmpg5XtLq-Actions/WorkflowPostProcess@main
         with:
-          shell: powershell
+          shell: pwsh
           eventId: "DO0094"
           telemetryScopeJson: ${{ needs.CreateRelease.outputs.telemetryScopeJson }}
